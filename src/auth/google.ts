@@ -4,12 +4,7 @@ import type { Env } from "../index";
 export const googleAuthRoutes = new Hono<{ Bindings: Env }>();
 
 const scopes = [
-  "https://www.googleapis.com/auth/classroom.courses.readonly",
-  "https://www.googleapis.com/auth/classroom.rosters",
-  "https://www.googleapis.com/auth/classroom.coursework.students",
-  "https://www.googleapis.com/auth/classroom.announcements",
-  "https://www.googleapis.com/auth/classroom.courseworkmaterials",
-  "https://www.googleapis.com/auth/classroom.topics"
+  "https://www.googleapis.com/auth/classroom.courses.readonly"
 ];
 
 googleAuthRoutes.get("/start", async (c) => {
