@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { googleAuthRoutes } from "./auth/google";
 import { classroomRoutes } from "./classroom/routes";
 import { classroomFetch } from "./classroom/client";
+import { handleMcp } from "./mcp";
 
 export type Env = {
   GOOGLE_CLIENT_ID: string;
@@ -36,6 +37,8 @@ app.get("/health/classroom", async (c) => {
     return c.json({ connected: false }, 502);
   }
 });
+
+app.all("/mcp", (c) => handleMcp(c.req.raw, c.env));
 
 app.route("/oauth/google", googleAuthRoutes);
 app.route("/api/classroom", classroomRoutes);
