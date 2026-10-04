@@ -12,10 +12,13 @@ const scopes = [
   "https://www.googleapis.com/auth/classroom.topics"
 ];
 
-googleAuthRoutes.get("/start", (c) => {
+googleAuthRoutes.get("/start", async (c) => {
   const callback = new URL(c.req.url);
   callback.pathname = c.env.GOOGLE_REDIRECT_PATH;
   callback.search = "";
+
+  const state = crypto.randomUUID();
+  await c.env.GOOGLE_TOKENS.put("oauth_state:" + state, "pending", { expirationTtl: 600 });
 
   const params = new URLSearchParams({
     client_id: c.env.GOOGLE_CLIENT_ID,
@@ -24,6 +27,7 @@ googleAuthRoutes.get("/start", (c) => {
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: "true",
+    state,
     scope: scopes.join(" ")
   });
 
@@ -33,6 +37,14 @@ googleAuthRoutes.get("/start", (c) => {
 });
 
 googleAuthRoutes.get("/callback", async (c) => {
+  const state = c.req.query("state");
+  if (!state) return c.json({ error: "Missing OAuth state. Start authorization again." }, 400);
+
+  const stateKey = "oauth_state:" + state;
+  const pendingState = await c.env.GOOGLE_TOKENS.get(stateKey);
+  if (!pendingState) return c.json({ error: "Invalid or expired OAuth state. Start authorization again." }, 400);
+  await c.env.GOOGLE_TOKENS.delete(stateKey);
+
   const oauthError = c.req.query("error");
   if (oauthError) return c.json({ error: "Google authorization was not completed", google_error: oauthError }, 400);
 
