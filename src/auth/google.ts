@@ -33,6 +33,9 @@ googleAuthRoutes.get("/start", (c) => {
 });
 
 googleAuthRoutes.get("/callback", async (c) => {
+  const oauthError = c.req.query("error");
+  if (oauthError) return c.json({ error: "Google authorization was not completed", google_error: oauthError }, 400);
+
   const code = c.req.query("code");
   if (!code) return c.json({ error: "Missing OAuth authorization code" }, 400);
 
@@ -58,11 +61,21 @@ googleAuthRoutes.get("/callback", async (c) => {
   }
 
   const token = await response.json<Record<string, unknown>>();
+  const refreshToken =
+    typeof token.refresh_token === "string" ? token.refresh_token : undefined;
+
+  if (!refreshToken) {
+    return c.json({
+      error: "Google did not return a refresh token.",
+      next: "Revoke the app grant and authorize again with consent."
+    }, 400);
+  }
+
+  await c.env.GOOGLE_TOKENS.put("primary_refresh_token", refreshToken);
 
   return c.json({
     connected: true,
-    refresh_token_received: Boolean(token.refresh_token),
-    next:
-      "Store the refresh token securely as a Cloudflare secret. Do not expose it in GitHub."
+    refresh_token_stored: true,
+    next: "Google Classroom authorization is connected."
   });
 });
