@@ -1,14 +1,15 @@
 import type { Env } from "../index";
 
 export async function getAccessToken(env: Env): Promise<string> {
-  if (!env.GOOGLE_REFRESH_TOKEN) {
-    throw new Error("GOOGLE_REFRESH_TOKEN is not configured");
+  const refreshToken = env.GOOGLE_REFRESH_TOKEN ?? await env.GOOGLE_TOKENS.get("primary_refresh_token");
+  if (!refreshToken) {
+    throw new Error("Google Classroom is not authorized");
   }
 
   const body = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
     client_secret: env.GOOGLE_CLIENT_SECRET,
-    refresh_token: env.GOOGLE_REFRESH_TOKEN,
+    refresh_token: refreshToken,
     grant_type: "refresh_token"
   });
 
