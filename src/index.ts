@@ -8,6 +8,7 @@ export type Env = {
   GOOGLE_REFRESH_TOKEN?: string;
   APP_AUTH_TOKEN?: string;
   GOOGLE_REDIRECT_PATH: string;
+  GOOGLE_TOKENS: KVNamespace;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -15,7 +16,7 @@ const app = new Hono<{ Bindings: Env }>();
 app.get("/", (c) => c.json({
   service: "Classroom Teaching Assistant",
   status: "ok",
-  version: "0.1.0"
+  version: "0.2.0"
 }));
 
 app.route("/oauth/google", googleAuthRoutes);
